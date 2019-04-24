@@ -1,0 +1,2 @@
+CREATE DATABASE IF NOT EXISTS SystemDb;
+GRANT ALL PRIVILEGES ON `SystemDb`.* TO 'administrator'@'%';

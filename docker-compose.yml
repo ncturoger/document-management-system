@@ -1,0 +1,60 @@
+version: '2.3'
+services:
+  db:
+    image: mariadb
+    container_name: system-db
+    ports:
+      - "3306:3306"
+    volumes:
+      - ./initdb.d:/docker-entrypoint-initdb.d
+    environment:
+      MYSQL_ROOT_PASSWORD: admin
+      MYSQL_USER: administrator
+      MYSQL_PASSWORD: test
+      TZ: 'Asia/Taipei'
+    networks:
+      - web_nw
+    restart: always
+    healthcheck:
+      test: mysql --user=administrator --password=test --host=db --port=3306 -e 'use SystemDb'
+
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin
+    container_name: db-phpmyadmin
+    networks:
+        - web_nw
+    ports:
+      - "8888:80"
+    environment:
+      - 'TZ=Asia/Taipei'
+    links:
+      - db:db
+    depends_on:
+      - db
+
+  app:
+    build:
+      context: .
+      dockerfile: dockerfile/Dockerfile
+      network: host
+    container_name: system-app
+    depends_on:
+      db:
+        condition: service_healthy
+    volumes:
+      - .:/usr/src/app
+      - ./log:/var/log/uwsgi
+    networks:
+      - web_nw
+    ports:
+      - "8880:5000"
+    environment:
+      TZ: Asia/Taipei
+    stdin_open: true
+    tty: true
+    command: bash -c "flask db upgrade head && flask run --host 0.0.0.0"
+
+networks:
+  web_nw:
+    driver: bridge
+

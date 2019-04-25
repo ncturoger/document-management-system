@@ -5,6 +5,7 @@ import click
 import openpyxl
 from bs4 import BeautifulSoup
 import requests
+from tqdm import tqdm
 
 
 
@@ -40,7 +41,8 @@ def test_insert_doc(excel_path):
             post_list.append({'title': row[1].value, 'link': row[1].hyperlink.target})
     
     # print(post_list)
-    for post in post_list:
+    print("Start to saving...")
+    for post in tqdm(post_list):
         res = requests.get(post['link'])
         # print(res.text)
         soup = BeautifulSoup(res.text, 'html.parser')
